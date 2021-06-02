@@ -5,10 +5,11 @@ Java query census.gov international database for population, parse with Jackson,
 `mvn clean package`
 
 # Run
-`java -jar target/census-graph-*-jar-with-dependencies.jar <countryCode1> [ <countryCode2> ...]`
+`java -jar target/census-graph-*-jar-with-dependencies.jar [start-year] <countryCode1> [ <countryCode2> ...]`
 
 # Examples
 - `java -jar target/census-graph-*-jar-with-dependencies.jar US JP BR MX IN CN ID`
+- `java -jar target/census-graph-*-jar-with-dependencies.jar 1990 US MX CA`
 
 # References
 - [census.gov API](https://www.census.gov/data/developers/data-sets/international-database.html)

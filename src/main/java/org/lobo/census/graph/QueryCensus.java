@@ -25,7 +25,7 @@ public class QueryCensus {
     private static final String CENSUS_API = "https://api.census.gov/data/timeseries/idb/5year";
     private static final String API_KEY = "fee00b0d52c7cd8f170a09ce4785218a70523396";
 
-    public static CountryData[] getData(String[] countryCodes) {
+    public static CountryData[] getData(int startYear, String[] countryCodes) {
         // Generate the countries parameter string
         StringBuilder countriesStringBuilder = new StringBuilder();
         for (String countryCode : countryCodes)
@@ -38,7 +38,7 @@ public class QueryCensus {
 
         // Generate the countries parameter string
         StringBuilder yearsStringBuilder = new StringBuilder();
-        for (int i = 1950; i <= 2020; i++)
+        for (int i = startYear; i <= 2021; i++)
             yearsStringBuilder.append("YR=" + i + "&");
         yearsStringBuilder.setLength(yearsStringBuilder.length() - 1);
         System.out.println("Years string: " + yearsStringBuilder);
