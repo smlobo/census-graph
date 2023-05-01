@@ -38,7 +38,7 @@ public class QueryCensus {
 
         // Generate the countries parameter string
         StringBuilder yearsStringBuilder = new StringBuilder();
-        for (int i = startYear; i <= 2021; i++)
+        for (int i = startYear; i <= 2022; i++)
             yearsStringBuilder.append("YR=" + i + "&");
         yearsStringBuilder.setLength(yearsStringBuilder.length() - 1);
         System.out.println("Years string: " + yearsStringBuilder);
@@ -53,7 +53,7 @@ public class QueryCensus {
         HashMap<String,CountryData> countryDataMap = new HashMap<>();
 
         try {
-            URL url = new URL(CENSUS_API + "?get=NAME&YR=2021&key=" + API_KEY + "&" +
+            URL url = new URL(CENSUS_API + "?get=NAME&YR=2022&key=" + API_KEY + "&" +
                     countriesURLString);
             HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
             InputStream inputStream = conn.getInputStream();
