@@ -9,10 +9,7 @@ import java.io.Reader;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
@@ -27,24 +24,28 @@ public class QueryCensus {
 
     public static CountryData[] getData(int startYear, String[] countryCodes) {
         // Generate the countries parameter string
-        StringBuilder countriesStringBuilder = new StringBuilder();
-        for (String countryCode : countryCodes)
-            countriesStringBuilder.append("GENC=" + countryCode + "&");
-        countriesStringBuilder.setLength(countriesStringBuilder.length() - 1);
-        System.out.println("Countries string: " + countriesStringBuilder);
+        // StringBuilder countriesStringBuilder = new StringBuilder();
+        // for (String countryCode : countryCodes)
+        //     countriesStringBuilder.append("GENC=" + countryCode + "&");
+        // countriesStringBuilder.setLength(countriesStringBuilder.length() - 1);
+        // System.out.println("Countries string: " + countriesStringBuilder);
 
         // Initialize the country names
-        Map<String,CountryData> countryDataMap = getCountryNames(countriesStringBuilder.toString());
+        // Map<String,CountryData> countryDataMap = getCountryNames(countriesStringBuilder.toString());
 
-        // Generate the countries parameter string
+        // Generate the years parameter string
         StringBuilder yearsStringBuilder = new StringBuilder();
-        for (int i = startYear; i <= 2022; i++)
+        for (int i = startYear; i <= 2024; i++)
             yearsStringBuilder.append("YR=" + i + "&");
         yearsStringBuilder.setLength(yearsStringBuilder.length() - 1);
         System.out.println("Years string: " + yearsStringBuilder);
 
         // Fill in the population data for countries & years
-        getPopulation(countryDataMap, countriesStringBuilder.toString(), yearsStringBuilder.toString());
+        // getPopulation(countryDataMap, countriesStringBuilder.toString(), yearsStringBuilder.toString());
+
+        // Convert the array of country codes to a Set
+        Set<String> countryCodeSet = new HashSet<>(Arrays.asList(countryCodes));
+        Map<String,CountryData> countryDataMap = getPopulationNew(countryCodeSet, yearsStringBuilder.toString());
 
         return countryDataMap.values().toArray(new CountryData[0]);
     }
@@ -144,5 +145,60 @@ public class QueryCensus {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static Map<String,CountryData> getPopulationNew(Set<String> countrySet, String yearsURLString) {
+        HashMap<String,CountryData> countryDataMap = new HashMap<>();
+
+        try {
+            URL url = new URL(CENSUS_API + "?get=POP,NAME,GENC&key=" + API_KEY + "&" + yearsURLString);
+            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+            InputStream inputStream = conn.getInputStream();
+
+            // Jackson JsonParser
+            JsonParser parser = new JsonFactory().createParser(inputStream);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            boolean firstArray = true;
+            while (!parser.isClosed()) {
+                JsonToken token = parser.nextToken();
+
+                if (token == JsonToken.END_ARRAY) {
+                    firstArray = false;
+                    continue;
+                }
+
+                if (firstArray || token != JsonToken.START_ARRAY)
+                    continue;
+
+                ArrayNode arrayNode = objectMapper.readTree(parser);
+                JsonNode populationNode = arrayNode.get(0);
+                JsonNode nameNode = arrayNode.get(1);
+                JsonNode codeNode = arrayNode.get(2);
+                JsonNode yearNode = arrayNode.get(3);
+
+                // Skip countries not requested
+                if (!countrySet.contains(codeNode.asText()))
+                    continue;
+                // System.out.println(codeNode.asText() + " : " + nameNode.asText() + " / " + yearNode.asText() + " = " +
+                //        populationNode.asText());
+
+                CountryData countryData = countryDataMap.get(codeNode.asText());
+                if (countryData == null) {
+                    countryData = new CountryData(nameNode.asText());
+                    countryDataMap.put(codeNode.asText(), countryData);
+                }
+                countryData.add(yearNode.asText(), Integer.parseInt(populationNode.asText()));
+            }
+
+            inputStream.close();
+            conn.disconnect();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return countryDataMap;
     }
 }

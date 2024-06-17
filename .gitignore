@@ -30,3 +30,7 @@ hs_err_pid*
 
 # Build destination for Maven
 target/
+
+# jenv
+.java-version
+
